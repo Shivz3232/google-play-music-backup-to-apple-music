@@ -30,6 +30,7 @@ func main() {
 
 	if os.Getenv("APPLE_MUSIC_DEVELOPER_TOKEN") == "" {
 		os.Setenv("APPLE_MUSIC_DEVELOPER_TOKEN", getDeveloperToken())
+		fmt.Printf("Generated new developer token: %s\n", os.Getenv("APPLE_MUSIC_DEVELOPER_TOKEN"))
 	}
 
 	developerToken := os.Getenv("APPLE_MUSIC_DEVELOPER_TOKEN")
@@ -49,7 +50,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("Created playlist: %s\n", playlistName)
+	fmt.Printf("Created playlist: %s\n", pl.Attributes.Name)
 
 	// Get all files in the directory
 	files, err := os.ReadDir(directoryPath)
@@ -70,7 +71,7 @@ func main() {
 		songName := fileName[:len(fileName)-len(filepath.Ext(fileName))]
 
 		fmt.Printf("Searching song: %s\n", songName)
-		songs, err := api.SearchSong(developerToken, musicUserToken, storefront.Id, songName, "songs")
+		songs, err := api.SearchSong(developerToken, musicUserToken, storefront.Id, songName, []string{"songs"}, "en-GB", []string{"topResults"})
 		if err != nil {
 			fmt.Printf("Error searching for song with name: %s\n", songName)
 			log.Fatalln(err)
@@ -82,6 +83,7 @@ func main() {
 		}
 
 		fmt.Printf("Inserting song: %s\n", songs[0].Attributes.Name)
+		fmt.Println("-------------------------------------------------------------------")
 		err = playlist.InsertSong(developerToken, musicUserToken, pl.Id, songs[0].Id)
 		if err != nil {
 			fmt.Printf("Error inserting song into playlist: %s\n", songs[0].Id)

@@ -6,21 +6,31 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"shivu/google-play-music-backup-reader/models"
 	"strings"
 )
 
-func SearchSong(developerToken string, musicUserToken string, storefront string, searchStr string, types string) ([]models.Song, error) {
+func SearchSong(developerToken string, musicUserToken string, storefront string, searchStr string, types []string, localization string, with []string) ([]models.Song, error) {
 	term := getTermQueryParam(searchStr)
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/search?term=%s&types=%s", storefront, url.QueryEscape(term), url.QueryEscape(types)), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("https://api.music.apple.com/v1/catalog/%s/search", storefront), nil)
 	if err != nil {
 		return nil, err
 	}
 
+	queryParams := req.URL.Query()
+
+	queryParams.Add("term", term)
+	queryParams.Add("types", strings.Join(types, ","))
+	queryParams.Add("l", localization)
+	queryParams.Add("with", strings.Join(with, ","))
+
+	req.URL.RawQuery = queryParams.Encode()
+
 	req.Header.Set("Authorization", "Bearer "+developerToken)
 	req.Header.Set("Music-User-Token", musicUserToken)
+
+	fmt.Println(req.RequestURI)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
